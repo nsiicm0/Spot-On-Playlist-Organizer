@@ -1,5 +1,8 @@
 import os
 import yaml
+import logging
+
+module_logger  = logging.getLogger('spoton.util')
 
 class Spoton_Util():
     """
@@ -20,5 +23,8 @@ class Spoton_Util():
         Returns:
             Multi-dimensional array
         """
-        with open("config.yml") as config:
+        logger = logging.getLogger('spoton.util.Config')
+        configfile = 'config.yml'
+        logger.debug('Reading config from {}'.format(configfile))
+        with open(configfile) as config:
             return yaml.safe_load(config)
