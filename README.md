@@ -7,6 +7,7 @@ Lists usually tend to get cluttered over time. So do also Spotify playlists. Eve
 ## How to get started?
 
 1. Clone this repository.
+2. Run ```python setup.py install```
 2. Go to https://developer.spotify.com and sign up.
 3. Create an app on https://developer.spotify.com.
 4. Take note of the client-id and client-secret.
