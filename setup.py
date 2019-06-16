@@ -9,6 +9,7 @@ setup(
     install_requires=[
         'requests>=2.3.0',
         'six>=1.10.0',
-        'spotipy>=2.4.4'
+        'spotipy>=2.4.4',
+        'spotify-token>=0.1.0'
     ],
     packages=['spoton'])
