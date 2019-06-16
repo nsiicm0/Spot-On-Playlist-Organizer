@@ -9,7 +9,7 @@ from spoton.extract import Spoton_Extract
 class Spoton_Controller:
 
     def __init__(self):
-        self.config = Spoton_Util().load_config()
+        self.config = Spoton_Util.load_config()
         self.logger = logging.getLogger('spoton.Controller')
 
     def run(self):
@@ -25,7 +25,7 @@ class Spoton_Controller:
             none
         """
         self.logger.info('Started application')
-        Spoton_Extract()
+        Spoton_Extract().extract()
         self.logger.info('Finished application')
 
 def _setup_logging():
@@ -38,7 +38,7 @@ def _setup_logging():
         Returns:
             none
         """
-        conf = Spoton_Util().load_config()
+        conf = Spoton_Util.load_config()
         root = logging.getLogger('spoton')
         logFormatter = logging.Formatter("%(asctime)s [%(name)s] [%(levelname)-5.5s]  %(message)s")
         root.setLevel(os.environ.get("LOGLEVEL", conf['app']['logging']['level']))
