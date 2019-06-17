@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import argparse
 from datetime import datetime
 
 from spoton.utils import Spoton_Util
@@ -8,9 +9,10 @@ from spoton.extract import Spoton_Extract
 
 class Spoton_Controller:
 
-    def __init__(self):
+    def __init__(self, arguments):
         self.config = Spoton_Util.load_config()
         self.logger = logging.getLogger('spoton.Controller')
+        self.arguments = arguments
 
     def run(self):
         """
@@ -25,7 +27,9 @@ class Spoton_Controller:
             none
         """
         self.logger.info('Started application')
-        Spoton_Extract().extract()
+        if not self.arguments.no_extraction:
+            Spoton_Extract().extract()
+        
         self.logger.info('Finished application')
 
 def _setup_logging():
@@ -53,7 +57,32 @@ def _setup_logging():
             fileHandler.setLevel(logging.DEBUG)
             root.addHandler(fileHandler)
         root.propagate = False
+        return root
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser( description="Optimize your Spotify playlists",
+        epilog="Example usage: python app.py --full",
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    parser.add_argument('--full', action='store_true',
+                        default=False,
+                        dest='full',
+                        help='Runs the full pipeline (recommended when running for the first time).')
+
+    parser.add_argument('--no-extraction', action='store_true',
+                        default=False,
+                        dest='no_extraction',
+                        help='Skips extraction of data from the spotify api.')
+
+    results = parser.parse_args()
+
     _setup_logging()
-    Spoton_Controller().run()
+    logger = logging.getLogger('spoton.Bootstrap')
+    
+    if len(sys.argv) > 1:
+        if results.full and results.no_extraction:
+            logger.info("Arguments invalid. Run app.py --help for help!")
+        else:
+            Spoton_Controller(results).run()
+    else:
+        logger.info("No arguments provided! Run app.py --help for help!")
