@@ -133,5 +133,5 @@ class Spoton_Transform():
         cluster_exportable = ((
             self.df[['id','label']]
         ).assign(label=lambda _df: _df['label'].replace(np.nan, 1337))
-        ).assign(label=lambda _df: _df['label'].map({0:'Archive Playlist 1', 1: 'Archive Playlist 2', 1337: 'Archive Playlist 3'}))
+        ).assign(label=lambda _df: _df['label'].map({0:'Archive Playlist 1', 1: 'Archive Playlist 2', 1337: 'Archive Playlist 1337'}))
         cluster_exportable.to_pickle('{}/clusters_{}.pkl'.format(self.config['app']['data']['path'],self.timestamp)) 

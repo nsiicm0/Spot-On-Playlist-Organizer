@@ -4,6 +4,7 @@ import logging
 import argparse
 from datetime import datetime
 
+from spoton.load import Spoton_Load
 from spoton.utils import Spoton_Util
 from spoton.extract import Spoton_Extract
 from spoton.transform import Spoton_Transform
@@ -33,6 +34,9 @@ class Spoton_Controller:
 
         if not self.arguments.no_transformation:
             Spoton_Transform(timestamp).transform()
+
+        if not self.arguments.no_loading:
+            Spoton_Load(timestamp).load()
         
         self.logger.info('Finished application')
 
@@ -77,6 +81,11 @@ if __name__ == '__main__':
                         default=False,
                         dest='no_transformation',
                         help='Skips transformation of extracted data from the spotify api.')
+
+    parser.add_argument('--no-loading', action='store_true',
+                        default=False,
+                        dest='no_loading',
+                        help='Skips loading of extracted and transformed data from the spotify api.')
 
     results = parser.parse_args()
     global_timestamp = datetime.now().strftime('%Y%m%d%H%M')
