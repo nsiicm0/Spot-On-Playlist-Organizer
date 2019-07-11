@@ -1,9 +1,8 @@
 import logging
-from .utils import Spoton_Util
 import spotipy
-import pandas as pd
 import itertools
-from datetime import datetime
+import pandas as pd
+from .utils import Spoton_Util
 
 module_logger  = logging.getLogger('spoton.extract')
 
@@ -18,10 +17,11 @@ class Spoton_Extract():
 
     """
 
-    def __init__(self):
+    def __init__(self, timestamp):
         self.logger = logging.getLogger('spoton.extract.Extractor')
         self.config = Spoton_Util.load_config()
         self.token = Spoton_Util.auth_spotify()
+        self.timestamp = timestamp
         self.logger.debug('Starting extraction')
 
     def _get_track(self, results):
@@ -79,8 +79,8 @@ class Spoton_Extract():
             trackfeatures.extend(_features)
         self.logger.debug('Fetched all track metadata.')
         pd_trackinfo = pd.DataFrame(trackinfo)
-        pd_trackinfo.to_pickle('{}/trackinfo_{}.pkl'.format(self.config['app']['data']['path'],datetime.now().strftime('%Y%m%d%H%M'))) 
+        pd_trackinfo.to_pickle('{}/trackinfo_{}.pkl'.format(self.config['app']['data']['path'],self.timestamp)) 
         pd_trackfeatures = pd.DataFrame(trackfeatures)
-        pd_trackfeatures.to_pickle('{}/trackfeatures_{}.pkl'.format(self.config['app']['data']['path'],datetime.now().strftime('%Y%m%d%H%M')))
+        pd_trackfeatures.to_pickle('{}/trackfeatures_{}.pkl'.format(self.config['app']['data']['path'],self.timestamp))
         self.logger.debug('Pickled all track metadata.') 
         self.logger.debug('Done extracting.') 

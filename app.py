@@ -6,6 +6,7 @@ from datetime import datetime
 
 from spoton.utils import Spoton_Util
 from spoton.extract import Spoton_Extract
+from spoton.transform import Spoton_Transform
 
 class Spoton_Controller:
 
@@ -14,7 +15,7 @@ class Spoton_Controller:
         self.logger = logging.getLogger('spoton.Controller')
         self.arguments = arguments
 
-    def run(self):
+    def run(self, timestamp):
         """
         Controller run function.
 
@@ -28,11 +29,14 @@ class Spoton_Controller:
         """
         self.logger.info('Started application')
         if not self.arguments.no_extraction:
-            Spoton_Extract().extract()
+            Spoton_Extract(timestamp).extract()
+
+        if not self.arguments.no_transformation:
+            Spoton_Transform(timestamp).transform()
         
         self.logger.info('Finished application')
 
-def _setup_logging():
+def _setup_logging(timestamp):
         """
         Sets up loggging functionality for the app.
 
@@ -52,7 +56,7 @@ def _setup_logging():
             consoleHandler.setLevel(logging.WARNING)
             root.addHandler(consoleHandler)
         if conf['app']['logging']['file']:
-            fileHandler = logging.FileHandler('{}/{}.log'.format(conf['app']['logging']['logpath'], datetime.now().strftime('%Y%m%d%H%M%S')))
+            fileHandler = logging.FileHandler('{}/{}.log'.format(conf['app']['logging']['logpath'], timestamp))
             fileHandler.setFormatter(logFormatter)
             fileHandler.setLevel(logging.DEBUG)
             root.addHandler(fileHandler)
@@ -61,28 +65,23 @@ def _setup_logging():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser( description="Optimize your Spotify playlists",
-        epilog="Example usage: python app.py --full",
+        epilog="Example usage (recommended if run for the first time): python app.py",
         formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    parser.add_argument('--full', action='store_true',
-                        default=False,
-                        dest='full',
-                        help='Runs the full pipeline (recommended when running for the first time).')
 
     parser.add_argument('--no-extraction', action='store_true',
                         default=False,
                         dest='no_extraction',
                         help='Skips extraction of data from the spotify api.')
 
-    results = parser.parse_args()
+    parser.add_argument('--no-transformation', action='store_true',
+                        default=False,
+                        dest='no_transformation',
+                        help='Skips transformation of extracted data from the spotify api.')
 
-    _setup_logging()
+    results = parser.parse_args()
+    global_timestamp = datetime.now().strftime('%Y%m%d%H%M')
+    _setup_logging(global_timestamp)
     logger = logging.getLogger('spoton.Bootstrap')
     
-    if len(sys.argv) > 1:
-        if results.full and results.no_extraction:
-            logger.info("Arguments invalid. Run app.py --help for help!")
-        else:
-            Spoton_Controller(results).run()
-    else:
-        logger.info("No arguments provided! Run app.py --help for help!")
+    logger.debug("Run parameters: {}".format(results))
+    Spoton_Controller(results).run(global_timestamp)
