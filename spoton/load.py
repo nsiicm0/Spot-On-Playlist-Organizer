@@ -40,8 +40,7 @@ class Spoton_Load():
         Returns:
             none
         """
-        #pd_trackinfo = pd.read_pickle('{}/trackinfo_{}.pkl'.format(self.config['app']['data']['path'],self.timestamp)) 
-        self.df = pd.read_pickle('data/clusters_201907112253.pkl') 
+        self.df = pd.read_pickle('{}/clusters_{}.pkl'.format(self.config['app']['data']['path'],self.timestamp)) 
 
         self._create_playlist()
         self._update_playlists()
