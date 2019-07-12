@@ -1,6 +1,5 @@
 import logging
 import spotipy
-import itertools
 import pandas as pd
 from .utils import Spoton_Util
 
@@ -67,8 +66,6 @@ class Spoton_Extract():
         self.logger.debug('Retrieved {} tracks'.format(str(len(track_ids))))
         
         # Get track details
-        start = 0
-        end = 50
         trackinfo = []
         trackfeatures = []
         # we have to loop in chunks of 50 due to api limitation
