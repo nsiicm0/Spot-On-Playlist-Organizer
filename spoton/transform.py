@@ -2,10 +2,13 @@ import logging
 import itertools
 import numpy as np
 import pandas as pd
+from sklearn import metrics
 from .utils import Spoton_Util
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA  
+from sklearn.cluster import AffinityPropagation
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import GridSearchCV
 
 module_logger  = logging.getLogger('spoton.transform')
 
@@ -124,14 +127,50 @@ class Spoton_Transform():
         self.logger.debug('Starting to cluster the data...')
         pca = PCA()
         X = pca.fit_transform(self.df.loc[:, ~self.df.columns.isin(['id'])])
-        kmeans = KMeans(n_clusters=2,init='k-means++', random_state=1337).fit(X)
-        prediction = pd.DataFrame(np.array(kmeans.predict(X)), columns=['label'])
+        if not self.config['app']['clustering']['sophisticated']:
+            kmeans = KMeans(n_clusters=2,init='k-means++', random_state=1337).fit(X)
+            prediction = pd.DataFrame(np.array(kmeans.predict(X)), columns=['label'])
+        else:
+            parameters = {
+                'preference': (-100, -95, -90, -85, -80, -75, -70, -65, -60, -55, -50, -45, -40, -35, -30, -25, -20, -15, -10, -5)
+            }
+            gs = GridSearchCV(estimator=AffinityPropagation(), param_grid=parameters, 
+                            scoring=self._cv_silhouette_scorer, cv=self.DisabledCV(), n_jobs=-1)
+            gs.fit(self.df.loc[:, ~self.df.columns.isin(['id'])])
+            af = AffinityPropagation(preference=gs.best_params_['preference']).fit(X)
+            prediction = pd.DataFrame(af.labels_, columns=['label'])
         self.df = pd.concat([self.df, prediction], axis=1)
 
     def _store(self):
         self.logger.debug('Starting to store the data...')
+        mapping = {}
+        for label in self.df['label'].unique():
+            if label == label: #check for nan, nan's are not equal to itself
+                mapping[int(label)] = 'Archive Playlist {}'.format(int(label+1))
+            else:
+                mapping[1337] = 'Archive Playlist 1337'
         cluster_exportable = ((
             self.df[['id','label']]
         ).assign(label=lambda _df: _df['label'].replace(np.nan, 1337))
-        ).assign(label=lambda _df: _df['label'].map({0:'Archive Playlist 1', 1: 'Archive Playlist 2', 1337: 'Archive Playlist 1337'}))
+        ).assign(label=lambda _df: _df['label'].map(mapping))
         cluster_exportable.to_pickle('{}/clusters_{}.pkl'.format(self.config['app']['data']['path'],self.timestamp)) 
+
+    def _cv_silhouette_scorer(self, estimator, X):
+        estimator.fit(X)
+        cluster_labels = estimator.labels_
+        num_labels = len(set(cluster_labels))
+        num_samples = len(X.index)
+        if num_labels == 1 or num_labels == num_samples:
+            return -1
+        else:
+            return metrics.silhouette_score(X, cluster_labels)
+
+    class DisabledCV:
+        def __init__(self):
+            self.n_splits = 1
+
+        def split(self, X, y=None, groups=None):
+            yield (np.arange(len(X)), np.arange(len(X)))
+        
+        def get_n_splits(self, X, y, groups=None):
+            return self.n_splits
