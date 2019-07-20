@@ -1,6 +1,4 @@
 auth:
-    client_id: CLIENT_ID_GOES_HERE
-    client_secret: CLIENT_SECRET_GOES_HERE
     username: YOUR_USERNAME_GOES_HERE
     password: YOUR_PASSWORD_GOES_HERE
 spotify:
@@ -11,12 +9,12 @@ spotify:
 app:
     logging:
         level: DEBUG
-        console: true
         file: true
         logpath: log
     data:
         path: data
     transformation:
-        use_standard_scaler: true
+        use_standard_scaler: false
     clustering:
         sophisticated: true
+        unsophisticated_cluster_count: 2

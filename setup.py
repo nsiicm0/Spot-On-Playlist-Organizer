@@ -11,6 +11,8 @@ setup(
         'six>=1.10.0',
         'spotipy>=2.4.4',
         'spotify-token>=0.1.0',
-        'pandas'
+        'pandas>=0.23.4',
+        'numpy>=1.15.4',
+        'scikit-learn>=0.20.1'
     ],
     packages=['spoton'])

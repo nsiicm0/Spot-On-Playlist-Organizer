@@ -1,5 +1,4 @@
 import logging
-import itertools
 import numpy as np
 import pandas as pd
 from sklearn import metrics
@@ -33,6 +32,7 @@ class Spoton_Transform():
     def transform(self):
         """ 
         Main entrypoint to start transformation.
+        Here happens all the magic. We modify the data so it can be clustered. After that we apply clustering.
         
         Args:
             none
@@ -46,6 +46,16 @@ class Spoton_Transform():
         self.logger.debug('Transformation is done...')
 
     def _prepare(self):
+        """ 
+        Preparation step of the transformation process.
+        In here we do scale and normalize the data. This way we ensure a standardized input for the clustering.
+        
+        Args:
+            none
+        
+        Returns:
+            none
+        """
         self.logger.debug('Starting to prepare the data...')
         # Loading the data
         pd_trackinfo = pd.read_pickle('{}/trackinfo_{}.pkl'.format(self.config['app']['data']['path'],self.timestamp)) 
@@ -124,31 +134,54 @@ class Spoton_Transform():
             self.df = df_clean
 
     def _cluster(self):
+        """ 
+        Clustering step of the transformation process.
+        Clustering is being applied.
+        
+        Args:
+            none
+        
+        Returns:
+            none
+        """
         self.logger.debug('Starting to cluster the data...')
         pca = PCA()
         X = pca.fit_transform(self.df.loc[:, ~self.df.columns.isin(['id'])])
         if not self.config['app']['clustering']['sophisticated']:
-            kmeans = KMeans(n_clusters=2,init='k-means++', random_state=1337).fit(X)
+            kmeans = KMeans(n_clusters=self.config['app']['clustering']['unsophisticated_cluster_count'],init='k-means++', random_state=1337).fit(X)
             prediction = pd.DataFrame(np.array(kmeans.predict(X)), columns=['label'])
         else:
             parameters = {
-                'preference': (-100, -95, -90, -85, -80, -75, -70, -65, -60, -55, -50, -45, -40, -35, -30, -25, -20, -15, -10, -5)
+                'preference': (-50, -45, -40, -35, -30, -25, -20, -15, -10, -5)
             }
             gs = GridSearchCV(estimator=AffinityPropagation(), param_grid=parameters, 
                             scoring=self._cv_silhouette_scorer, cv=self.DisabledCV(), n_jobs=-1)
             gs.fit(self.df.loc[:, ~self.df.columns.isin(['id'])])
+            self.logger.debug('Best configuration for preference: {}'.format(str(gs.best_params_['preference'])))
             af = AffinityPropagation(preference=gs.best_params_['preference']).fit(X)
+            self.logger.debug('Found {} clusters!'.format(str(len(np.unique(af.labels_)))))
             prediction = pd.DataFrame(af.labels_, columns=['label'])
         self.df = pd.concat([self.df, prediction], axis=1)
 
     def _store(self):
+        """ 
+        Stores the dataframe with it's associated cluster designation to disk for later use.
+        
+        Args:
+            none
+        
+        Returns:
+            none
+        """
         self.logger.debug('Starting to store the data...')
         mapping = {}
+        prefix = self.config['spotify']['output']['prefix']
         for label in self.df['label'].unique():
             if label == label: #check for nan, nan's are not equal to itself
-                mapping[int(label)] = 'Archive Playlist {}'.format(int(label+1))
+                mapping[int(label)] = '{} Playlist {}'.format(prefix, int(label+1))
             else:
-                mapping[1337] = 'Archive Playlist 1337'
+                mapping[1337] = '{} Playlist 1337'.format(prefix)
+        self.logger.debug('Mapping configuration: {}'.format(mapping))
         cluster_exportable = ((
             self.df[['id','label']]
         ).assign(label=lambda _df: _df['label'].replace(np.nan, 1337))
@@ -156,6 +189,17 @@ class Spoton_Transform():
         cluster_exportable.to_pickle('{}/clusters_{}.pkl'.format(self.config['app']['data']['path'],self.timestamp)) 
 
     def _cv_silhouette_scorer(self, estimator, X):
+        """ 
+        Silhouette scorer
+        Used within cross validation of the unsupervised clustering process.
+        The silhouette score is being used to optimize during the cross validation process.
+        
+        Args:
+            none
+        
+        Returns:
+            none
+        """
         estimator.fit(X)
         cluster_labels = estimator.labels_
         num_labels = len(set(cluster_labels))
@@ -163,9 +207,14 @@ class Spoton_Transform():
         if num_labels == 1 or num_labels == num_samples:
             return -1
         else:
-            return metrics.silhouette_score(X, cluster_labels)
+            return metrics.silhouette_score(X, cluster_labels, metric='sqeuclidean')
 
     class DisabledCV:
+        """ 
+        Dummy class
+        Enables us to use cross validation on a clustering algorithm.
+        Normally cross validation only works with classifiers.
+        """
         def __init__(self):
             self.n_splits = 1
 

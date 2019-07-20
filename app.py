@@ -54,11 +54,6 @@ def _setup_logging(timestamp):
         root = logging.getLogger('spoton')
         logFormatter = logging.Formatter("%(asctime)s [%(name)s] [%(levelname)-5.5s]  %(message)s")
         root.setLevel(os.environ.get("LOGLEVEL", conf['app']['logging']['level']))
-        if conf['app']['logging']['console']:
-            consoleHandler = logging.StreamHandler()
-            consoleHandler.setFormatter(consoleHandler)
-            consoleHandler.setLevel(logging.WARNING)
-            root.addHandler(consoleHandler)
         if conf['app']['logging']['file']:
             fileHandler = logging.FileHandler('{}/{}.log'.format(conf['app']['logging']['logpath'], timestamp))
             fileHandler.setFormatter(logFormatter)
@@ -93,4 +88,5 @@ if __name__ == '__main__':
     logger = logging.getLogger('spoton.Bootstrap')
     
     logger.debug("Run parameters: {}".format(results))
+    logger.debug("Global timestamp: {}".format(global_timestamp))
     Spoton_Controller(results).run(global_timestamp)

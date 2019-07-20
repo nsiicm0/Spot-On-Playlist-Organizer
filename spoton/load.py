@@ -1,6 +1,5 @@
 import logging
 import spotipy
-import itertools
 import numpy as np
 import pandas as pd
 from .utils import Spoton_Util
@@ -14,7 +13,7 @@ class Spoton_Load():
     """
     Spoton_Load() class. 
 
-    This class is used to load the data previously extracted from the spotify developer api.
+    This class is used to load the data into Spotify.
 
     Usage: Use in code
         Spoton_Load().load()
@@ -33,6 +32,7 @@ class Spoton_Load():
     def load(self):
         """ 
         Main entrypoint to start loading.
+        In this process we will store the cluster results in Spotify.
         
         Args:
             none
@@ -47,15 +47,34 @@ class Spoton_Load():
         self.logger.debug('Loading is done...')
 
     def _create_playlist(self):
+        """ 
+        Creates the playlists in Spotify for later use.
+        These playlists are being used to hold the cluster results.
+        
+        Args:
+            none
+        
+        Returns:
+            none
+        """
         self.logger.debug('Starting to create new playlists...')
         sp = spotipy.Spotify(auth=self.token)
         sp.trace = False
         for playlist in list(self.df['label'].unique()):
             playlist_name = '{} {}'.format(playlist, self.timestamp)
-            sp.user_playlist_create(user=self.config['spotify']['username'], name=playlist_name, public=False)
             self.spotify_playlist_info[playlist_name] = sp.user_playlist_create(user=self.config['spotify']['username'], name=playlist_name, public=False)
 
     def _update_playlists(self):
+        """ 
+        Updating of previously created playlists.
+        In this step we actually save the results onto Spotify.
+        
+        Args:
+            none
+        
+        Returns:
+            none
+        """
         self.logger.debug('Starting to update the newly created playlists...')
         sp = spotipy.Spotify(auth=self.token)
         sp.trace = False
