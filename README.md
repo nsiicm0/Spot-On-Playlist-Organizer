@@ -27,6 +27,10 @@ How do you make good playlists then? We simply use the silhouette score of the c
 4. Run app.py using the following command: ``` python app.py ```
 5. Enjoy your freshly created playlists.
 
+Use ```python app.py --help``` for help.
+
+Want to use example data? Or any specific dump of data? Specify the timestamp of a past run using (in this case example data): ```python app.py --past-run 201907201413```
+
 ### Packages required
 
 ```
@@ -89,4 +93,4 @@ app:                                            # --- App section
 
 ## Discussion
 
-My extended insight can be found on Medium. <<Link will follow>>
+My extended insight can be found on Medium: https://medium.com/@nsiicm0/spot-on-a-way-to-organize-spotify-playlists-c792ee8ade74

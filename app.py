@@ -82,8 +82,16 @@ if __name__ == '__main__':
                         dest='no_loading',
                         help='Skips loading of extracted and transformed data from the spotify api.')
 
+    parser.add_argument('--past-run',
+                        action="store", dest="past_run",
+                        help="Specify a timestamp of a past run to utilize data of an old run.", default="")
+
     results = parser.parse_args()
-    global_timestamp = datetime.now().strftime('%Y%m%d%H%M')
+
+    if len(results.past_run) > 0:
+        global_timestamp = results.past_run
+    else:
+        global_timestamp = datetime.now().strftime('%Y%m%d%H%M')
     _setup_logging(global_timestamp)
     logger = logging.getLogger('spoton.Bootstrap')
     
